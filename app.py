@@ -42,34 +42,37 @@ class Database:
                 u = record["u"]
                 return {'id': u["id"], 'username': u["username"], 'name': u["name"]}
             return None
-        
+            
 
     def get_all_users(self) -> List[dict]:
         with self.driver.session() as session:
             result = session.run("MATCH (u:User) RETURN u")
             return [{'id': u["u"]["id"], 'username': u["u"]["username"], 'name': u["u"]["name"]} for u in result]
 
-    def create_post(self, user_id: str, content: str):
-        pass
+    def create_post(self, post_id, user_id, content):
+        query = (
+            "MATCH (u:User {id: $user_id}) "
+            "CREATE (p:Post {id: $post_id, content: $content, timestamp: datetime()}) "
+            "CREATE (u)-[:AUTHORED]->(p) RETURN p"
+        )
+        with self.driver.session() as session:
+            return session.run(query, post_id=post_id, user_id=user_id, content=content).single()["p"]
 
-    def get_posts_by_user(self, user_id: str):
-        pass
-
-    def get_feed(self, user_id: str):
-        pass
-
-    def follow_user(self, follower_id: str, followee_id: str):
-        pass
-
-    def get_followers(self, user_id: str):
-        pass
-
-    def get_following(self, user_id: str):
-        pass
-
-    def unfollow_user(self, follower_id: str, followee_id: str):
-        pass
-
+    def get_posts_by_user(self, user_id):
+        query = (
+            "MATCH (u:User {id: $user_id})-[:AUTHORED]->(p:Post) "
+            "RETURN p ORDER BY p.timestamp DESC"
+        )
+        with self.driver.session() as session:
+            return [r["p"] for r in session.run(query, user_id=user_id)]
+    
+    def get_feed(self, user_id):
+        query = (
+            "MATCH (u:User {id: $user_id})-[:FOLLOWS]->(f:User)-[:AUTHORED]->(p:Post) "
+            "RETURN p, f ORDER BY p.timestamp DESC"
+        )
+        with self.driver.session() as session:
+            return [ {"post": r["p"], "author": r["f"]} for r in session.run(query, user_id=user_id) ]
 # ======================
 # Web Application
 # ======================
