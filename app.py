@@ -6,6 +6,7 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from neo4j import GraphDatabase
 
+
 # ======================
 # Database Access Layer
 # ======================
