@@ -73,6 +73,36 @@ class Database:
         )
         with self.driver.session() as session:
             return [ {"post": r["p"], "author": r["f"]} for r in session.run(query, user_id=user_id) ]
+        
+    def follow_user(self, follower_id, followee_id):
+        query = (
+            "MATCH (a:User {id: $follower}), (b:User {id: $followee}) "
+            "MERGE (a)-[:FOLLOWS]->(b)"
+        )
+        with self.driver.session() as session:
+            session.run(query, follower=follower_id, followee=followee_id)
+
+    def unfollow_user(self, follower_id, followee_id):
+        query = (
+            "MATCH (a:User {id: $follower})-[r:FOLLOWS]->(b:User {id: $followee}) "
+            "DELETE r"
+        )
+        with self.driver.session() as session:
+            session.run(query, follower=follower_id, followee=followee_id)
+
+    def get_followers(self, user_id):
+        query = (
+            "MATCH (f:User)-[:FOLLOWS]->(u:User {id: $user_id}) RETURN f"
+        )
+        with self.driver.session() as session:
+            return [r["f"] for r in session.run(query, user_id=user_id)]
+
+    def get_following(self, user_id):
+        query = (
+            "MATCH (u:User {id: $user_id})-[:FOLLOWS]->(f:User) RETURN f"
+        )
+        with self.driver.session() as session:
+            return [r["f"] for r in session.run(query, user_id=user_id)]
 # ======================
 # Web Application
 # ======================
