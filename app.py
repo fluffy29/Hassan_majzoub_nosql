@@ -42,6 +42,7 @@ class Database:
                 u = record["u"]
                 return {'id': u["id"], 'username': u["username"], 'name': u["name"]}
             return None
+        
 
     def get_all_users(self) -> List[dict]:
         with self.driver.session() as session:
