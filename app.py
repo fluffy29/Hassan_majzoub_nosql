@@ -74,6 +74,7 @@ class Database:
         with self.driver.session() as session:
             return [ {"post": r["p"], "author": r["f"]} for r in session.run(query, user_id=user_id) ]
         
+        
     def follow_user(self, follower_id, followee_id):
         query = (
             "MATCH (a:User {id: $follower}), (b:User {id: $followee}) "
